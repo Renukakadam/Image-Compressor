@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Compressor</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Image Compressor</h2>
+        <form action="/compress" method="POST" enctype="multipart/form-data">
+            <input type="file" name="image" accept="image/*" required onchange="previewImage(event)">
+            <button type="submit">Compress</button>
+        </form>
+        <img id="preview" src="#" alt="Image Preview" style="display:none;">
+    </div>
+
+    <script>
+        function previewImage(event) {
+            const preview = document.getElementById('preview');
+            preview.src = URL.createObjectURL(event.target.files[0]);
+            preview.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
