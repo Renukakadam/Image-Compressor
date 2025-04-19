@@ -14,21 +14,13 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                bat """
-                "%PYTHON_PATH%" -m venv venv
-                call venv\\Scripts\\activate.bat
-                pip install --upgrade pip
-                pip install -r requirements.txt
-                """
+                bat 'call "%PYTHON_PATH%" -m venv venv && venv\\Scripts\\activate && pip install -r requirements.txt'
             }
         }
 
         stage('Run Script') {
             steps {
-                bat """
-                call venv\\Scripts\\activate.bat
-                python main.py
-                """
+                bat 'call venv\\Scripts\\activate && python main.py'
             }
         }
     }
@@ -45,4 +37,5 @@ pipeline {
         }
     }
 }
+
 
