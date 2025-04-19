@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         VENV_DIR = 'venv'
+        PYTHON = '"C:\\Program Files\\Python312\\python.exe"'
     }
 
     stages {
@@ -20,21 +21,21 @@ pipeline {
 
         stage('Set Up Virtual Environment') {
             steps {
-                sh '''
-                    python3 -m venv $VENV_DIR
-                    source $VENV_DIR/bin/activate
+                bat """
+                    %PYTHON% -m venv %VENV_DIR%
+                    call %VENV_DIR%\\Scripts\\activate
                     pip install --upgrade pip
                     pip install -r requirements.txt
-                '''
+                """
             }
         }
 
         stage('Run Script') {
             steps {
-                sh '''
-                    source $VENV_DIR/bin/activate
+                bat """
+                    call %VENV_DIR%\\Scripts\\activate
                     python main.py
-                '''
+                """
             }
         }
     }
@@ -47,9 +48,7 @@ pipeline {
             echo '❌ Build failed!'
         }
         always {
-            echo '🧹 Pipeline finished.'
+            echo '📦 Pipeline execution finished.'
         }
     }
 }
-
-
