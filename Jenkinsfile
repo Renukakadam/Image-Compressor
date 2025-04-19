@@ -1,62 +1,39 @@
 pipeline {
     agent any
 
-    environment {
-        GIT_REPO = 'https://github.com/Renukakadam/Image-Compressor.git'
-    }
-
     stages {
-        stage('Checkout SCM') {
+        stage('Checkout') {
             steps {
-                script {
-                    // Checkout the code from the git repository
-                    git url: GIT_REPO, branch: 'main'
-                }
+                git 'https://github.com/Renukakadam/Image-Compressor.git'
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                echo 'Installing dependencies...'
-                bat 'pip install -r requirements.txt' // Assuming you're using pip for Python dependencies
-                // Install flake8 if it's not part of requirements.txt
-                bat 'pip install flake8'
+                sh '''
+                    python3 -m venv venv
+                    source venv/bin/activate
+                    pip install -r requirements.txt
+                '''
             }
         }
 
-        stage('Linting') {
+        stage('Run') {
             steps {
-                echo 'Running linting...'
-                bat 'flake8 .' // Run the flake8 linter
-            }
-        }
-
-        stage('Build') {
-            steps {
-                echo 'Building the project...'
-                bat 'python setup.py build' // Replace with your actual build command
-            }
-        }
-
-        stage('Run Tests') {
-            steps {
-                echo 'Running tests...'
-                bat 'pytest tests/' // Replace with your actual test command
+                sh '''
+                    source venv/bin/activate
+                    python main.py
+                '''
             }
         }
     }
 
     post {
-        always {
-            echo 'Cleaning up...'
-            // Add any cleanup steps here, such as deleting temporary files or logs.
-        }
         success {
-            echo 'Pipeline completed successfully.'
+            echo '✅ Build successful!'
         }
         failure {
-            echo 'Pipeline failed.'
+            echo '❌ Build failed!'
         }
     }
 }
-
