@@ -2,40 +2,33 @@ pipeline {
     agent any
 
     environment {
-        VENV_DIR = 'venv'
-        PYTHON = '"C:\\Program Files\\Python312\\python.exe"'
+        PYTHON_PATH = '"C:/Program Files/Python312/python.exe"'
     }
 
     stages {
-        stage('Clean Workspace') {
-            steps {
-                cleanWs()
-            }
-        }
-
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/Renukakadam/Image-Compressor.git'
             }
         }
 
-        stage('Set Up Virtual Environment') {
+        stage('Install Dependencies') {
             steps {
-                bat """
-                    %PYTHON% -m venv %VENV_DIR%
-                    call %VENV_DIR%\\Scripts\\activate
+                sh '''
+                    "${PYTHON_PATH}" -m venv venv
+                    source venv/Scripts/activate
                     pip install --upgrade pip
                     pip install -r requirements.txt
-                """
+                '''
             }
         }
 
         stage('Run Script') {
             steps {
-                bat """
-                    call %VENV_DIR%\\Scripts\\activate
+                sh '''
+                    source venv/Scripts/activate
                     python main.py
-                """
+                '''
             }
         }
     }
@@ -52,3 +45,4 @@ pipeline {
         }
     }
 }
+
