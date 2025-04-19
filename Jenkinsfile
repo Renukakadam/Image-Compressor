@@ -14,18 +14,20 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Install Dependencies') {
             steps {
                 echo 'Installing dependencies...'
                 bat 'pip install -r requirements.txt' // Assuming you're using pip for Python dependencies
+                // Install flake8 if it's not part of requirements.txt
+                bat 'pip install flake8'
             }
         }
 
         stage('Linting') {
             steps {
                 echo 'Running linting...'
-                bat 'flake8 .' // Replace with the correct linter command if needed
+                bat 'flake8 .' // Run the flake8 linter
             }
         }
 
