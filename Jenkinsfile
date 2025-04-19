@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        PYTHON_PATH = '"C:/Program Files/Python312/python.exe"'
+        PYTHON_PATH = "C:\\Program Files\\Python312\\python.exe"
     }
 
     stages {
@@ -14,21 +14,21 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh '''
-                    "${PYTHON_PATH}" -m venv venv
-                    source venv/Scripts/activate
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
-                '''
+                bat """
+                "%PYTHON_PATH%" -m venv venv
+                call venv\\Scripts\\activate.bat
+                pip install --upgrade pip
+                pip install -r requirements.txt
+                """
             }
         }
 
         stage('Run Script') {
             steps {
-                sh '''
-                    source venv/Scripts/activate
-                    python main.py
-                '''
+                bat """
+                call venv\\Scripts\\activate.bat
+                python main.py
+                """
             }
         }
     }
