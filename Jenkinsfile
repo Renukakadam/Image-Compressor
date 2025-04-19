@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git 'https://github.com/your-username/image-compressor.git'
+                git 'https://github.com/Renukakadam/Image-Compressor.git'
             }
         }
 
