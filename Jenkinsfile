@@ -1,10 +1,11 @@
 pipeline {
+pipeline {
     agent any
 
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/Renukakadam/Image-Compressor.git'
+                git branch: 'main', url: 'https://github.com/Renukakadam/Image-Compressor.git'
             }
         }
 
@@ -37,3 +38,4 @@ pipeline {
         }
     }
 }
+
