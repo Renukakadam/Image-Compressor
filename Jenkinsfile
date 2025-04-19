@@ -1,68 +1,43 @@
 pipeline {
     agent any
 
-    environment {
-        // Define environment variables if needed
-        DEPLOY_DIR = "/var/www/image-compressor"
-    }
-
     stages {
-        stage('Clone Repository') {
-            steps {
-                git 'https://github.com/Renukakadam/Image-Compressor.git'
-            }
-        }
-
         stage('Install Dependencies') {
             steps {
-                sh '''
-                    python3 -m venv venv
-                    source venv/bin/activate
-                    pip install -r requirements.txt
-                '''
+                echo 'Installing dependencies...'
+                sh 'npm install'
             }
         }
 
-        stage('Run Tests') {
+        stage('Linting') {
             steps {
-                sh '''
-                    source venv/bin/activate
-                    pytest
-                '''
+                echo 'Running lint checks...'
+                sh 'npm run lint || echo "Linting errors found, but continuing..."'
             }
         }
 
         stage('Build') {
             steps {
-                echo 'Building the Image Compressor...'
-                // Add any build steps here if applicable
+                echo 'Building the project...'
+                sh 'npm run build'
             }
         }
 
-        stage('Deploy') {
+        stage('Run Tests') {
             steps {
-                echo 'Deploying to server...'
-                // SSH Deploy Example
-                sshagent(['deploy-key']) {
-                    sh '''
-                        ssh -o StrictHostKeyChecking=no user@your-server-ip << EOF
-                        cd /var/www/image-compressor
-                        git pull origin main
-                        source venv/bin/activate
-                        systemctl restart image-compressor
-                        EOF
-                    '''
-                }
+                echo 'Running tests...'
+                sh 'npm test'
             }
         }
     }
 
     post {
-        success {
-            echo 'Pipeline executed successfully!'
-        }
         failure {
             echo 'Pipeline failed!'
         }
+        success {
+            echo 'Pipeline completed successfully!'
+        }
     }
 }
+
