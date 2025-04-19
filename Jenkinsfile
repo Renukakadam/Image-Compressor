@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    tools {
-        python 'Python3' // Ensure this is configured in Jenkins global tools
-    }
-
     environment {
         VENV_DIR = 'venv'
     }
@@ -25,9 +21,7 @@ pipeline {
         stage('Set Up Virtual Environment') {
             steps {
                 sh '''
-                    if [ ! -d "$VENV_DIR" ]; then
-                        python3 -m venv $VENV_DIR
-                    fi
+                    python3 -m venv $VENV_DIR
                     source $VENV_DIR/bin/activate
                     pip install --upgrade pip
                     pip install -r requirements.txt
@@ -53,9 +47,9 @@ pipeline {
             echo '❌ Build failed!'
         }
         always {
-            echo '🧹 Cleaning up...'
-            sh 'deactivate || true' // In case it's active
+            echo '🧹 Pipeline finished.'
         }
     }
 }
+
 
