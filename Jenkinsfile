@@ -12,6 +12,12 @@ pipeline {
                 }
             }
         }
+         stage('List Files') {
+            steps {
+                // List files in the workspace to check if the folder exists
+                sh 'ls -l'
+            }
+        }
 
         stage('Check for Changes') {
             steps {
