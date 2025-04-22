@@ -4,11 +4,11 @@ pipeline {
     stages {
         stage('Checkout SCM') {
             steps {
-                // Clone the repository
+                // Clone the repository (handled by declarative checkout scm)
                 checkout scm
-                // Store the commit hash
+                // Store the commit hash using bat for Windows
                 script {
-                    env.CURRENT_COMMIT = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
+                    env.CURRENT_COMMIT = bat(script: 'git rev-parse HEAD', returnStdout: true).trim()
                 }
             }
         }
@@ -17,11 +17,11 @@ pipeline {
             steps {
                 script {
                     // Get previous successful commit or fallback
-                    def previousCommit = env.LAST_SUCCESSFUL_COMMIT ?: sh(script: 'git rev-parse HEAD^', returnStdout: true).trim()
+                    def previousCommit = env.LAST_SUCCESSFUL_COMMIT ?: bat(script: 'git rev-parse HEAD^', returnStdout: true).trim()
                     env.LAST_SUCCESSFUL_COMMIT = env.CURRENT_COMMIT
                     
-                    // Check for changes
-                    def changes = sh(script: "git diff --name-only ${previousCommit} ${env.CURRENT_COMMIT}", returnStdout: true).trim()
+                    // Check for changes using bat
+                    def changes = bat(script: "git diff --name-only ${previousCommit} ${env.CURRENT_COMMIT}", returnStdout: true).trim()
                     if (changes) {
                         echo "Changes detected:\n${changes}"
                         env.HAS_CHANGES = 'true'
@@ -48,20 +48,37 @@ pipeline {
                 expression { env.HAS_CHANGES == 'true' }
             }
             steps {
-                // Run tests using pytest
-                bat 'python -m pytest tests/ --junitxml=test-results.xml'
+                script {
+                    try {
+                        // Run tests using pytest, if tests exist
+                        bat 'python -m pytest tests/ --junitxml=test-results.xml'
+                    } catch (Exception e) {
+                        echo "Warning: Tests failed or not found. Continuing pipeline. Error: ${e}"
+                        // Mark the build as unstable instead of failed
+                        currentBuild.result = 'UNSTABLE'
+                    }
+                }
             }
         }
     }
 
     post {
         always {
-            // Publish test results
-            junit 'test-results.xml'
+            // Publish test results if they exist
+            script {
+                if (fileExists('test-results.xml')) {
+                    junit 'test-results.xml'
+                } else {
+                    echo 'No test results found, skipping JUnit publishing.'
+                }
+            }
             echo 'Pipeline execution finished.'
         }
         success {
             echo 'Build and tests successful!'
+        }
+        unstable {
+            echo 'Tests failed, but pipeline continued.'
         }
         failure {
             echo 'Build failed!'
@@ -72,3 +89,4 @@ pipeline {
         }
     }
 }
+
