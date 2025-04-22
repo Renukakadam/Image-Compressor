@@ -4,11 +4,11 @@ pipeline {
     stages {
         stage('Checkout SCM') {
             steps {
-                // Clone the repository (handled by declarative checkout scm)
+                // Clone the repository
                 checkout scm
-                // Store the commit hash using bat for Windows
+                // Store the commit hash using SCM metadata
                 script {
-                    env.CURRENT_COMMIT = bat(script: 'git rev-parse HEAD', returnStdout: true).trim()
+                    env.CURRENT_COMMIT = env.GIT_COMMIT
                 }
             }
         }
@@ -17,11 +17,11 @@ pipeline {
             steps {
                 script {
                     // Get previous successful commit or fallback
-                    def previousCommit = env.LAST_SUCCESSFUL_COMMIT ?: bat(script: 'git rev-parse HEAD^', returnStdout: true).trim()
+                    def previousCommit = env.LAST_SUCCESSFUL_COMMIT ?: bat(script: '"C:\\Program Files\\Git\\bin\\git.exe" rev-parse HEAD^', returnStdout: true).trim()
                     env.LAST_SUCCESSFUL_COMMIT = env.CURRENT_COMMIT
                     
-                    // Check for changes using bat
-                    def changes = bat(script: "git diff --name-only ${previousCommit} ${env.CURRENT_COMMIT}", returnStdout: true).trim()
+                    // Check for changes
+                    def changes = bat(script: '"C:\\Program Files\\Git\\bin\\git.exe" diff --name-only %LAST_SUCCESSFUL_COMMIT% %CURRENT_COMMIT%', returnStdout: true).trim()
                     if (changes) {
                         echo "Changes detected:\n${changes}"
                         env.HAS_CHANGES = 'true'
@@ -35,7 +35,10 @@ pipeline {
 
         stage('Install Dependencies') {
             when {
-                expression { env.HAS_CHANGES == 'true' }
+                allOf {
+                    expression { env.HAS_CHANGES == 'true' }
+                    expression { fileExists('requirements.txt') }
+                }
             }
             steps {
                 // Install Python dependencies
@@ -54,7 +57,6 @@ pipeline {
                         bat 'python -m pytest tests/ --junitxml=test-results.xml'
                     } catch (Exception e) {
                         echo "Warning: Tests failed or not found. Continuing pipeline. Error: ${e}"
-                        // Mark the build as unstable instead of failed
                         currentBuild.result = 'UNSTABLE'
                     }
                 }
