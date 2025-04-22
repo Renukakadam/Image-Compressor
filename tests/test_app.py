@@ -3,13 +3,13 @@ import io
 import pytest
 from PIL import Image
 import sys
+import time
+import gc  # Added garbage collector
 
 # Add root directory to sys.path for module discovery
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from app.main import app, UPLOAD_FOLDER  # <-- Fixed this line
-
-import time
+from app.main import app, UPLOAD_FOLDER
 
 @pytest.fixture
 def client():
@@ -37,6 +37,7 @@ def test_image_compression(client):
    assert os.path.exists(compressed_path)
 
    time.sleep(1)
+   gc.collect()  # Force garbage collection to release file handles
 
    os.remove(os.path.join(UPLOAD_FOLDER, 'test_image.jpg'))
    os.remove(compressed_path)
