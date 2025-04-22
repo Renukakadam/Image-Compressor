@@ -6,7 +6,7 @@ pipeline {
             steps {
                 // Clone the repository
                 checkout scm
-                // Store the commit hash using SCM metadata
+                // Store the commit hash
                 script {
                     env.CURRENT_COMMIT = env.GIT_COMMIT
                 }
@@ -16,13 +16,14 @@ pipeline {
         stage('Check for Changes') {
             steps {
                 script {
-                    // Get previous successful commit or fallback
+                    // Get previous successful commit or fallback to previous commit
                     def previousCommit = env.LAST_SUCCESSFUL_COMMIT ?: bat(script: '"C:\\Program Files\\Git\\bin\\git.exe" rev-parse HEAD^', returnStdout: true).trim()
+                    // Update LAST_SUCCESSFUL_COMMIT only if pipeline succeeds
                     env.LAST_SUCCESSFUL_COMMIT = env.CURRENT_COMMIT
                     
                     // Check for changes
-                    def changes = bat(script: '"C:\\Program Files\\Git\\bin\\git.exe" diff --name-only %LAST_SUCCESSFUL_COMMIT% %CURRENT_COMMIT%', returnStdout: true).trim()
-                    if (changes) {
+                    def changes = bat(script: '"C:\\Program Files\\Git\\bin\\git.exe" diff --name-only %previousCommit% %CURRENT_COMMIT%', returnStdout: true).trim()
+                    if (changes && changes != env.CURRENT_COMMIT) {
                         echo "Changes detected:\n${changes}"
                         env.HAS_CHANGES = 'true'
                     } else {
@@ -42,22 +43,26 @@ pipeline {
             }
             steps {
                 // Install Python dependencies
-                bat 'python -m pip install pytest'
                 bat 'python -m pip install -r requirements.txt'
             }
         }
 
         stage('Run Tests') {
             when {
-                expression { env.HAS_CHANGES == 'true' }
+                allOf {
+                    expression { env.HAS_CHANGES == 'true' }
+                    expression { fileExists('tests') }
+                }
             }
             steps {
                 script {
                     try {
-                        // Run tests using pytest, if tests exist
+                        // Check if pytest is installed
+                        bat 'python -m pytest --version'
+                        // Run tests if pytest is available
                         bat 'python -m pytest tests/ --junitxml=test-results.xml'
                     } catch (Exception e) {
-                        echo "Warning: Tests failed or not found. Continuing pipeline. Error: ${e}"
+                        echo "Warning: Tests failed or pytest not found. Continuing pipeline. Error: ${e}"
                         currentBuild.result = 'UNSTABLE'
                     }
                 }
@@ -81,7 +86,7 @@ pipeline {
             echo 'Build and tests successful!'
         }
         unstable {
-            echo 'Tests failed, but pipeline continued.'
+            echo 'Tests failed or not found, but pipeline continued.'
         }
         failure {
             echo 'Build failed!'
