@@ -60,7 +60,8 @@ pipeline {
                         // Check if pytest is installed
                         bat 'python -m pytest --version'
                         // Run tests if pytest is available
-                        bat 'python -m pytest tests/ --junitxml=test-results.xml'
+                        bat 'set PYTHONPATH=%cd% && python -m pytest tests/ --junitxml=test-results.xml'
+
                     } catch (Exception e) {
                         echo "Warning: Tests failed or pytest not found. Continuing pipeline. Error: ${e}"
                         currentBuild.result = 'UNSTABLE'
