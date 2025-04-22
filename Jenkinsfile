@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+        PATH = "C:\\Program Files\\Python313;C:\\Program Files\\Python313\\Scripts;${env.PATH}"
+    }
+
     stages {
         stage('Checkout SCM') {
             steps {
@@ -49,7 +53,7 @@ pipeline {
                 }
             }
             steps {
-                // Install Python dependencies
+                bat 'python --version'
                 bat 'python -m pip install -r requirements.txt'
             }
         }
