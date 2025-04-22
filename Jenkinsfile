@@ -42,6 +42,7 @@ pipeline {
             }
             steps {
                 // Install Python dependencies
+                bat 'python -m pip install pytest'
                 bat 'python -m pip install -r requirements.txt'
             }
         }
